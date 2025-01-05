@@ -1,35 +1,36 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import { useQuery } from '@tanstack/react-query'
+import { useContext } from 'react'
+import { StateContext } from './context/StateContext'
+import { getCampaigns } from './api/campaigns'
 
-function App(): JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+export default function App() {
+  const state = useContext(StateContext)!
+  const query = useQuery({
+    queryKey: [state.access_token, 'campaigns'],
+    queryFn: async () => await getCampaigns(state.access_token)
+  })
+
+  console.log(query.data)
+  console.log(query.isSuccess)
 
   return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
+    <div className="flex flex-col p-3 h-full">
+      <div className="flex w-full items-center justify-between">
+        <h1 className="text-white text-4xl font-bold">Sessions</h1>
+        <button className="bg-white rounded-md px-4 py-2">Create new Campaign</button>
       </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
+      {query.isSuccess && query.data.isError === false && (
+        <div>
+          <p>hi</p>
+          <p>{JSON.stringify(query.data.value)}</p>
+          {query.data.value.map((a) => (
+            <div>
+              <p>{a.name}</p>
+              <p>{a.id}</p>
+            </div>
+          ))}
         </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
-    </>
+      )}
+    </div>
   )
 }
-
-export default App
